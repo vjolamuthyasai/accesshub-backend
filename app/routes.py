@@ -2,7 +2,7 @@ import requests
 from flask import Blueprint, jsonify, request, send_file
 
 from app.services import check_accessibility,generate_pdf
-
+from app.services.axe_checker import run_axe_analysis
 
 main = Blueprint("main", __name__)
 
@@ -13,10 +13,20 @@ def analyze():
         return jsonify({"error": "Please provide a URL ?url="}), 400
 
     try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        report = check_accessibility(response.text, url)
-        return jsonify(report)
+       result = run_axe_analysis(url)
+       summary = {
+           "total_issues": len(result["violations"]),
+           "by_impact": {}
+       }
+       for v in result["violations"]:
+           impact = v.get("impact", "unknown")
+           summary["by_impact"][impact] = summary["by_impact"].get(impact, 0) + 1
+
+       return jsonify({
+           "url": url,
+           "summary": summary,
+           "issues": result["violations"]
+       })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

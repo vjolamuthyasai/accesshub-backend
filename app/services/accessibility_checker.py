@@ -5,7 +5,6 @@ def check_accessibility(html, url):
     soup = BeautifulSoup(html, "html.parser")
     issues = []
 
-    # 1. Page title check
     if not soup.title or not soup.title.string.strip():
         issues.append({
             "type": "missing_title",
@@ -14,7 +13,6 @@ def check_accessibility(html, url):
             "severity": "high"
         })
 
-    # 2. Images without alt
     images = soup.find_all("img")
     for img in images:
         if not img.get("alt"):
@@ -25,7 +23,6 @@ def check_accessibility(html, url):
                 "severity": "high"
             })
 
-    # 3. Heading structure check
     headings = [int(h.name[1]) for h in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"])]
     for i in range(1, len(headings)):
         if headings[i] - headings[i - 1] > 1:
